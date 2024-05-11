@@ -1,18 +1,15 @@
-# app/controllers/courses_controller.rb
 class CoursesController < ApplicationController
   protect_from_forgery with: :null_session
 
   def create
-    course = Course.new(course_params)
+    @course = Course.new(course_params)
 
-    if course.save
-      tutors_params = params[:tutors]
-      tutors_params.each do |tutor_param|
-        course.tutors.create(name: tutor_param[:name], email: tutor_param[:email])
-      end
-      render json: course, status: :created
-    else
-      render json: { errors: course.errors.full_messages }, status: :unprocessable_entity
+    Course.transaction do
+      @course.save!
+      create_tutors
+    rescue ActiveRecord::RecordInvalid => e
+      handle_validation_errors(e)
+      raise ActiveRecord::Rollback
     end
   end
 
@@ -21,6 +18,23 @@ class CoursesController < ApplicationController
   end
 
   private
+
+  def create_tutors
+    tutors_params.each do |tutor_param|
+      tutor = @course.tutors.build(tutor_param)
+      tutor.save!
+    end
+  end
+
+  def handle_validation_errors(exception)
+    render json: { errors: exception.record.errors.full_messages }, status: :unprocessable_entity
+  end
+
+  def tutors_params
+    params.require(:tutors).map do |tutor_param|
+      tutor_param.permit(:name, :email)
+    end
+  end
 
   def course_params
     params.require(:course).permit(:title, :description, :start_date, :end_date)
