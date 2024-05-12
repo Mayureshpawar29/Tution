@@ -55,4 +55,31 @@ RSpec.describe CoursesController, type: :controller do
       end
     end
   end
+
+  describe 'GET #index' do
+    it 'returns a list of courses with tutors' do
+      course = FactoryBot.create(:course)
+      tutor1 = FactoryBot.create(:tutor, course: course)
+      tutor2 = FactoryBot.create(:tutor, course: course)
+
+      get :index, as: :json
+      expect(response).to have_http_status(:ok)
+
+      parsed_response = JSON.parse(response.body)
+      returned_course = parsed_response[0]
+
+      expect(returned_course).to include('title')
+      expect(returned_course['title']).to eq(course.title)
+
+      expect(returned_course).to include('description')
+      expect(returned_course['description']).to eq(course.description)
+
+      tutors = returned_course['tutors']
+
+      tutors.each do |tutor|
+        expect(tutor).to include('name')
+        expect(tutor).to include('email')
+      end
+    end
+  end
 end
