@@ -7,6 +7,7 @@ class CoursesController < ApplicationController
     Course.transaction do
       @course.save!
       create_tutors
+      render 'courses/create', status: :created
     rescue ActiveRecord::RecordInvalid => e
       handle_validation_errors(e)
       raise ActiveRecord::Rollback
