@@ -21,4 +21,20 @@ RSpec.describe Tutor, type: :model do
     tutor.email = 'invalid_email'
     expect(tutor).not_to be_valid
   end
+
+  it 'is not valid with a name longer than 50 characters' do
+    tutor.name = 'a' * 51
+    expect(tutor).not_to be_valid
+  end
+
+  it 'is not valid without a course_id' do
+    tutor.course_id = nil
+    expect(tutor).not_to be_valid
+  end
+
+  it 'is not valid with a non-unique email' do
+    tutor1 = create(:tutor, email: 'test@example.com')
+    tutor2 = build(:tutor, email: 'test@example.com')
+    expect(tutor2).not_to be_valid
+  end
 end

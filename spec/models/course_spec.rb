@@ -12,6 +12,17 @@ RSpec.describe Course, type: :model do
     expect(course).not_to be_valid
   end
 
+  it 'is not valid with a non-unique title' do
+    course1 = create(:course, title: 'Test Title')
+    course2 = build(:course, title: 'Test Title')
+    expect(course2).not_to be_valid
+  end
+
+  it 'is not valid with a description longer than 1000 characters' do
+    course.description = 'a' * 1001
+    expect(course).not_to be_valid
+  end
+
   it 'is valid when the start date is less than the end date' do
     course.start_date = Date.today
     course.end_date = Date.today + 1.day
