@@ -54,6 +54,37 @@ RSpec.describe CoursesController, type: :controller do
         expect(JSON.parse(response.body)['errors']).to include("Email is invalid")
       end
     end
+
+    context 'with duplicate course title' do
+      let(:duplicate_title_params) do
+        {
+          course: {
+            title: 'Introduction to Programming', # This title already exists
+            description: 'A beginner-friendly course on programming fundamentals.',
+            start_date: '2024-06-01',
+            end_date: '2024-08-01'
+          },
+          tutors: [
+            { name: 'John Doe', email: 'john.doe@example.com' },
+            { name: 'Jane Smith', email: 'jane.smith@example.com' }
+          ]
+        }
+      end
+
+      before do
+        FactoryBot.create(:course, title: 'Introduction to Programming')
+      end
+
+      it 'returns unprocessable_entity status' do
+        post :create, params: duplicate_title_params
+        expect(response).to have_http_status(:unprocessable_entity)
+      end
+
+      it 'returns error messages' do
+        post :create, params: duplicate_title_params
+        expect(JSON.parse(response.body)['errors']).to include("Title has already been taken")
+      end
+    end
   end
 
   describe 'GET #index' do
